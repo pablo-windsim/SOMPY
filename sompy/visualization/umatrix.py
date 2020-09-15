@@ -20,7 +20,8 @@ class UMatrixView(MatplotView):
 
         for i in range(som.codebook.nnodes):
             codebook_i = vector[i][np.newaxis, :]
-            neighborbor_ind = UD2[i][0:] <= distance
+            neighborbor_ind = (0 < UD2[i][0:]) & (UD2[i][0:] <= distance)            
+            
             neighborbor_codebooks = vector[neighborbor_ind]
             Umatrix[i] = scipy.spatial.distance_matrix(
                 codebook_i, neighborbor_codebooks).mean()
