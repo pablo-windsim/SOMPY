@@ -18,8 +18,8 @@ def generate_hex_lattice(n_rows, n_columns):
     y_coord = []
     for i in range(n_rows):
         for j in range(n_columns):
-            x_coord.append(i*1.5)
-            y_coord.append(np.sqrt(2/3)*(2*j+(1+i)%2))
+            x_coord.append(i*1)
+            y_coord.append(np.sqrt(0.75)*(j+(1+i)%2))
     coordinates = np.column_stack([x_coord, y_coord])
     return coordinates
 
@@ -121,12 +121,17 @@ class Codebook(object):
         pca.fit(data)
         eigvec = pca.components_
         eigval = pca.explained_variance_
-        norms = np.sqrt(np.einsum('ij,ij->i', eigvec, eigvec))
-        eigvec = ((eigvec.T/norms)*eigval).T
+        
+        #norms = np.sqrt(np.einsum('ij,ij->i', eigvec, eigvec))
+        #eigvec = ((eigvec.T/norms)*eigval).T
 
-        for j in range(self.nnodes):
-            for i in range(eigvec.shape[0]):
-                tmp_matrix[j, :] = tmp_matrix[j, :] + coord[j, i]*eigvec[i, :]
+        for i in range(0,2):
+            eigvec[i,:] = (eigvec[i,:] / np.linalg.norm(eigvec[i,:])) * eigval[i]**(0.5)
+
+        tmp_matrix = np.around(eigvec, decimals=6)
+        #for j in range(self.nnodes):
+        #    for i in range(eigvec.shape[0]):
+        #        tmp_matrix[j, :] = tmp_matrix[j, :] + coord[j, i]*eigvec[i, :]
 
         self.matrix = np.around(tmp_matrix, decimals=6)
         self.initialized = True
