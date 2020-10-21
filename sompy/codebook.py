@@ -19,7 +19,7 @@ def generate_hex_lattice(n_rows, n_columns):
     for i in range(n_rows):
         for j in range(n_columns):
             x_coord.append(i*1)
-            y_coord.append(np.sqrt(0.75)*(j+(1+i)%2))
+            y_coord.append(np.sqrt(0.75)/2*(2*j+(1+i)%2))
     coordinates = np.column_stack([x_coord, y_coord])
     return coordinates
 
