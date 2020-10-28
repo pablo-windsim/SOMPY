@@ -12,6 +12,7 @@ import tempfile
 import os
 import itertools
 import logging
+import scipy
 
 import numpy as np
 
@@ -671,7 +672,26 @@ class SOM(object):
         size2 = round(munits / size1)
 
         return [int(size1), int(size2)]
+    
+    def build_u_matrix(self, distance=1, row_normalized=False):
+        UD2 = self.calculate_map_dist()
+        Umatrix = np.zeros((self.codebook.nnodes, 1))
+        codebook = self.codebook.matrix
+        if row_normalized:
+            vector = self._normalizer.normalize_by(codebook.T, codebook.T,
+                                                  method='var').T
+        else:
+            vector = codebook
 
+        for i in range(self.codebook.nnodes):
+            codebook_i = vector[i][np.newaxis, :]
+            neighborbor_ind = (0 < UD2[i][0:]) & (UD2[i][0:] <= distance)            
+            
+            neighborbor_codebooks = vector[neighborbor_ind]
+            Umatrix[i] = scipy.spatial.distance_matrix(
+                codebook_i, neighborbor_codebooks).mean()
+
+        return Umatrix.reshape(self.codebook.mapsize,order='F')
 
 # Since joblib.delayed uses Pickle, this method needs to be a top level
 # method in order to be pickled
