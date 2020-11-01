@@ -337,8 +337,7 @@ class SOM(object):
             neighborhood = self.neighborhood.calculate(
                 self._distance_matrix, radius[i], self.codebook.nnodes)
             bmu = self.find_bmu(data, njb=njob)
-            self.codebook.matrix = self.update_codebook_voronoi(data, bmu,
-                                                                neighborhood)
+            self.codebook.matrix = self.update_codebook_voronoi(data, bmu,neighborhood)
 
             #lbugnon: ojo! aca el bmy[1] a veces da negativo, y despues de eso se rompe...hay algo raro ahi
             qerror = (i + 1, round(time() - t1, 3),
@@ -371,24 +370,22 @@ class SOM(object):
         """
         dlen = input_matrix.shape[0]
         y2 = np.einsum('ij,ij->i', self.codebook.matrix, self.codebook.matrix)
-        if njb == -1:
-            njb = cpu_count()
-
-        pool = Pool(njb)
-        chunk_bmu_finder = _chunk_based_bmu_find
-
-        def row_chunk(part):
-            return part * dlen // njb
-
-        def col_chunk(part):
-            return min((part+1)*dlen // njb, dlen)
-
-        chunks = [input_matrix[row_chunk(i):col_chunk(i)] for i in range(njb)]
-        b = pool.map(lambda chk: chunk_bmu_finder(chk, self.codebook.matrix, y2, nth=nth), chunks)
-        pool.close()
-        pool.join()
-        bmu = np.asarray(list(itertools.chain(*b))).T
-        del b
+        nnodes = self.codebook.matrix.shape[0]        
+        blen = min(self.codebook.matrix.shape)
+        
+        i0 = 0
+        bmu = np.zeros((dlen,2))
+        while i0+1 <= dlen:
+            low = i0
+            high = min(dlen-1, i0+blen)
+            i0 = i0+blen
+            ddata = input_matrix[low:high+1]            
+            Dist = y2.reshape(nnodes, 1) - 2*np.dot(self.codebook.matrix, ddata.T)
+            bmu[low:high+1, 0] = np.argmin(Dist,0)[:]
+            bmu[low:high+1, 1] = np.min(Dist,0)
+        
+        bmu = bmu.transpose()
+        
         return bmu
 
     @timeit(logging.DEBUG)
@@ -719,16 +716,16 @@ def _chunk_based_bmu_find(input_matrix, codebook, y2, nth=1):
     blen = min(50, dlen)
     i0 = 0
 
-    while i0+1 <= dlen:
+    while i0+1 <= dlen-1:
         low = i0
         high = min(dlen, i0+blen)
         i0 = i0+blen
-        ddata = input_matrix[low:high+1]
+        ddata = input_matrix[low:high-1]
         d = np.dot(codebook, ddata.T)
         d *= -2
         d += y2.reshape(nnodes, 1)
-        bmu[low:high+1, 0] = np.argpartition(d, nth, axis=0)[nth-1]
-        bmu[low:high+1, 1] = np.partition(d, nth, axis=0)[nth-1]
+        bmu[low:high-1, 0] = np.argpartition(d, nth, axis=0)[nth-1]
+        bmu[low:high-1, 1] = np.partition(d, nth, axis=0)[nth-1]
         del ddata
 
     return bmu
