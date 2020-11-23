@@ -220,7 +220,10 @@ class SOM(object):
         logging.root.setLevel(
             getattr(logging, verbose.upper()) if verbose else logging.ERROR)
 
-        logging.info(" Training...")
+        #logging.info(" Training...")
+        print(" Training...")
+        sys.stdout.flush()
+        
         logging.debug((
             "--------------------------------------------------------------\n"
             " details: \n"
@@ -329,8 +332,12 @@ class SOM(object):
         # data point, but later we need it calculate quantification error
         fixed_euclidean_x2 = np.einsum('ij,ij->i', data, data)
 
-        logging.info(" radius_ini: %f , radius_final: %f, trainlen: %d\n" %
-                     (radiusin, radiusfin, trainlen))
+        #logging.info(" radius_ini: %f , radius_final: %f, trainlen: %d\n" %
+        #            (radiusin, radiusfin, trainlen))
+        
+        print(" radius_ini: %f , radius_final: %f, trainlen: %d\n" %
+                    (radiusin, radiusfin, trainlen))
+        sys.stdout.flush()
 
         for i in range(trainlen):
             t1 = time()
@@ -345,9 +352,14 @@ class SOM(object):
             #lbugnon
             #ipdb.set_trace()
             #
-            logging.info(
-                " epoch: %d ---> elapsed time:  %f, quantization error: %f\n" %
+            # logging.info(
+            #     " epoch: %d ---> elapsed time:  %f, quantization error: %f\n" %
+            #     qerror)
+            
+            print(" epoch: %d ---> elapsed time:  %f, quantization error: %f\n" %
                 qerror)
+            sys.stdout.flush()
+            
             if np.any(np.isnan(qerror)):
                 logging.info("nan quantization error, exit train\n")
                 
