@@ -700,7 +700,7 @@ class SOM(object):
             Umatrix[i] = scipy.spatial.distance_matrix(
                 codebook_i, neighborbor_codebooks).mean()
 
-        return Umatrix.reshape(self.codebook.mapsize)
+        return np.flipud(Umatrix.reshape(self.codebook.mapsize,order='F'))
 
 # Since joblib.delayed uses Pickle, this method needs to be a top level
 # method in order to be pickled
